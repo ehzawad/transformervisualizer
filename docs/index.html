@@ -1,591 +1,597 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Transformer Visualizer</title>
-    <!-- Production-ready Tailwind CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.5/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Production-ready React & ReactDOM -->
-    <script
-      crossorigin
-      src="https://unpkg.com/react@18/umd/react.production.min.js"
-    ></script>
-    <script
-      crossorigin
-      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
-    ></script>
-    <!-- Babel for production (minified) -->
-    <script src="https://unpkg.com/@babel/standalone@7.22.15/babel.min.js"></script>
-    <!-- Favicon fix -->
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-  </head>
-  <body class="p-4 bg-gray-100">
-    <div id="root"></div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transformer Visualizer</title>
+  <!-- Tailwind CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.5/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- React CDNs -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Replace this -->
+<!-- <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script> -->
 
-    <script type="text/babel">
-      const { useState, useEffect } = React;
+<!-- With this -->
+  <script src="https://unpkg.com/@babel/standalone@7.22.15/babel.min.js"></script>
+</head>
+<body class="p-4 bg-gray-100">
+  <div id="root"></div>
 
-      // Simplified UI components using Tailwind CSS
-      const Card = ({ children, className = '' }) => (
-        <div className={`w-full max-w-6xl bg-white rounded-lg shadow-md ${className}`}>
-          {children}
-        </div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Simplified UI components using Tailwind classes
+    const Card = ({ children, className }) => (
+      <div className={`w-full max-w-6xl bg-white rounded-lg shadow-md ${className}`}>
+        {children}
+      </div>
+    );
+
+    const CardContent = ({ children }) => (
+      <div className="p-6">{children}</div>
+    );
+
+    const Button = ({ children, variant = 'default', ...props }) => (
+      <button
+        className={`px-4 py-2 rounded-md transition-colors ${
+          variant === 'default' 
+            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+            : 'border border-gray-300 hover:bg-gray-50'
+        }`}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+
+    // Paste the entire TransformerVisualizer component here
+    // (Replace component imports with the above simplified components)
+    
+    const TransformerVisualizer = () => {
+      const [step, setStep] = useState(0);
+      const [selectedToken, setSelectedToken] = useState(null);
+      const [selectedHead, setSelectedHead] = useState(0);
+    
+      // Carefully crafted paragraph with clear attention patterns
+      const paragraph = "Marie Curie discovered radium in 1898. She devoted her life to studying radioactive elements. Her groundbreaking research earned her two Nobel prizes. Despite facing discrimination as a woman, Curie persevered in her work. The scientist's dedication revolutionized our understanding of radioactivity.";
+      
+      const sentences = paragraph.split(". ").map(s => s.trim());
+      const tokens = paragraph.split(/\s+/);
+      
+      // d_model = 64 (scaled from 512 for visualization)
+      const d_model = 64;
+      const d_k = 32; // per head
+      const num_heads = 4;
+    
+      // Generate embeddings (simplified for visualization)
+      const embeddings = tokens.map(() => 
+        Array(d_model).fill(0).map(() => (Math.random() * 2 - 1) * 0.1)
       );
-
-      const CardContent = ({ children }) => (
-        <div className="p-6">{children}</div>
-      );
-
-      const Button = ({ children, variant = 'default', ...props }) => (
-        <button
-          className={`px-4 py-2 rounded-md transition-colors ${
-            variant === 'default'
-              ? 'bg-blue-600 text-white hover:bg-blue-700'
-              : 'border border-gray-300 hover:bg-gray-50'
-          }`}
-          {...props}
-        >
-          {children}
-        </button>
-      );
-
-      // Define simple Chevron icons (in lieu of lucide-react imports)
-      const ChevronRight = (props) => (
-        <svg
-          {...props}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-      );
-
-      const ChevronLeft = (props) => (
-        <svg
-          {...props}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      );
-
-      // Main TransformerVisualizer component
-      const TransformerVisualizer = () => {
+    
+      // Interesting attention patterns to highlight
+      const attentionPatterns = {
+        coreference: {
+          "Marie Curie": ["She", "Her", "Curie", "scientist"],
+          "research": ["work", "studying"],
+          "radioactive": ["radioactivity", "radium"]
+        },
+        subjectVerb: {
+          "Curie": ["discovered", "devoted", "persevered"],
+          "research": ["earned"],
+          "dedication": ["revolutionized"]
+        }
+      };
+    
+      // Animation helper for matrix multiplication
+      const useMatrixAnimation = (matrixA, matrixB) => {
         const [step, setStep] = useState(0);
-        const [selectedToken, setSelectedToken] = useState(null);
-        const [selectedHead, setSelectedHead] = useState(0);
-
-        // A carefully crafted paragraph for visualization
-        const paragraph =
-          "Marie Curie discovered radium in 1898. She devoted her life to studying radioactive elements. Her groundbreaking research earned her two Nobel prizes. Despite facing discrimination as a woman, Curie persevered in her work. The scientist's dedication revolutionized our understanding of radioactivity.";
-        const sentences = paragraph.split(". ").map((s) => s.trim());
-        const tokens = paragraph.split(/\s+/);
-
-        // Model dimensions for visualization
-        const d_model = 64;
-        const d_k = 32; // per head
-        const num_heads = 4;
-
-        // Generate random embeddings for tokens (for visualization)
-        const embeddings = tokens.map(() =>
-          Array(d_model)
-            .fill(0)
-            .map(() => (Math.random() * 2 - 1) * 0.1)
-        );
-
-        // Define some attention patterns for demonstration
-        const attentionPatterns = {
-          coreference: {
-            "Marie Curie": ["She", "Her", "Curie", "scientist"],
-            "research": ["work", "studying"],
-            "radioactive": ["radioactivity", "radium"]
-          },
-          subjectVerb: {
-            "Curie": ["discovered", "devoted", "persevered"],
-            "research": ["earned"],
-            "dedication": ["revolutionized"]
+        const [result, setResult] = useState([]);
+    
+        useEffect(() => {
+          if (step < matrixA.length * matrixB[0].length) {
+            const i = Math.floor(step / matrixB[0].length);
+            const j = step % matrixB[0].length;
+            const value = matrixA[i].reduce((sum, a, k) => sum + a * matrixB[k][j], 0);
+            
+            setResult(prev => {
+              const newResult = [...prev];
+              if (!newResult[i]) newResult[i] = [];
+              newResult[i][j] = value;
+              return newResult;
+            });
+    
+            const timer = setTimeout(() => setStep(step + 1), 200);
+            return () => clearTimeout(timer);
           }
-        };
-
-        // A helper function for positional encoding
-        const getPositionalEncoding = (position, dim) => {
-          return dim % 2 === 0
-            ? Math.sin(position / Math.pow(10000, dim / d_model))
-            : Math.cos(position / Math.pow(10000, (dim - 1) / d_model));
-        };
-
-        // Define steps for visualization
-        const steps = [
-          {
-            title: "Input Text Analysis",
-            content: (
-              <div className="space-y-4">
-                <div className="text-sm mb-4">
-                  Let's analyze this paragraph to understand attention patterns:
+        }, [step, matrixA, matrixB]);
+    
+        return { step, result };
+      };
+    
+      // Positional encoding calculation
+      const getPositionalEncoding = (position, dim) => {
+        return dim % 2 === 0
+          ? Math.sin(position / Math.pow(10000, dim / d_model))
+          : Math.cos(position / Math.pow(10000, (dim - 1) / d_model));
+      };
+    
+      const steps = [
+        {
+          title: "Input Text Analysis",
+          content: (
+            <div className="space-y-4">
+              <div className="text-sm mb-4">
+                Let's analyze this paragraph to understand attention patterns:
+              </div>
+              <div className="space-y-2">
+                {sentences.map((sentence, idx) => (
+                  <div key={idx} className="p-3 bg-gray-50 rounded-lg">
+                    {sentence}
+                  </div>
+                ))}
+              </div>
+              <div className="text-sm mt-4">
+                Key patterns to observe:
+                <ul className="list-disc ml-5 mt-2">
+                  <li>Coreference: "Marie Curie" → "She" → "Her" → "scientist"</li>
+                  <li>Subject-verb relationships</li>
+                  <li>Topical connections: "radium" → "radioactive" → "radioactivity"</li>
+                </ul>
+              </div>
+            </div>
+          )
+        },
+        {
+          title: "Positional Encoding",
+          content: (
+            <div className="space-y-4">
+              <div className="text-sm mb-4">
+                Before processing tokens, we add positional information to preserve word order:
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {tokens.map((token, pos) => (
+                  <div key={pos} className="p-2 bg-gray-50 rounded">
+                    <div className="font-medium mb-1">{token}</div>
+                    <div className="grid grid-cols-8 gap-px">
+                      {Array(16).fill(0).map((_, dim) => (
+                        <div
+                          key={dim}
+                          className="h-2 w-2"
+                          style={{
+                            backgroundColor: `rgba(59,130,246,${
+                              Math.abs(getPositionalEncoding(pos, dim))
+                            })`
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Position {pos + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="text-sm mt-4">
+                Positional encoding uses sine and cosine functions of different frequencies:
+                <ul className="list-disc ml-5 mt-2">
+                  <li>Even dimensions use sin(pos/10000^(2i/d_model))</li>
+                  <li>Odd dimensions use cos(pos/10000^(2i/d_model))</li>
+                  <li>This creates unique patterns for each position</li>
+                </ul>
+              </div>
+            </div>
+          )
+        },
+        {
+          title: "Token Embeddings",
+          content: (
+            <div className="space-y-4">
+              <div className="text-sm mb-4">
+                Each token is converted to a {d_model}-dimensional vector:
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {tokens.map((token, idx) => (
+                  <div 
+                    key={idx}
+                    className={`p-2 rounded cursor-pointer ${
+                      selectedToken === idx ? 'bg-blue-100 border-blue-300' : 'bg-gray-50'
+                    }`}
+                    onClick={() => setSelectedToken(idx)}
+                  >
+                    <div className="font-medium mb-1">{token}</div>
+                    <div className="grid grid-cols-8 gap-px">
+                      {embeddings[idx].slice(0, 16).map((val, i) => (
+                        <div
+                          key={i}
+                          className="h-2 w-2"
+                          style={{
+                            backgroundColor: `rgba(59,130,246,${Math.abs(val)})`
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Showing first 16 of {d_model} dimensions
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        },
+        {
+          title: "Matrix Multiplication Steps",
+          content: (
+            <div className="space-y-4">
+              <div className="text-sm mb-4">
+                Let's see how Q, K, V matrices are computed step by step:
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 p-4 rounded">
+                  <div className="font-medium mb-2">Computing Q = XW_q</div>
+                  <div className="relative">
+                    {/* Animated matrix multiplication visualization */}
+                    <div className="grid grid-cols-8 gap-px mb-4">
+                      {Array(64).fill(0).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-2 w-2 bg-blue-500 transition-all duration-300"
+                          style={{
+                            opacity: i < step * 8 ? 1 : 0.2
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Computing element {Math.floor(step/8)},{step%8}
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  {sentences.map((sentence, idx) => (
-                    <div key={idx} className="p-3 bg-gray-50 rounded-lg">
-                      {sentence}
-                    </div>
-                  ))}
-                </div>
-                <div className="text-sm mt-4">
-                  Key patterns to observe:
-                  <ul className="list-disc ml-5 mt-2">
-                    <li>Coreference: "Marie Curie" → "She" → "Her" → "scientist"</li>
-                    <li>Subject-verb relationships</li>
-                    <li>Topical connections: "radium" → "radioactive" → "radioactivity"</li>
-                  </ul>
-                </div>
-              </div>
-            )
-          },
-          {
-            title: "Positional Encoding",
-            content: (
-              <div className="space-y-4">
-                <div className="text-sm mb-4">
-                  Before processing tokens, we add positional information to preserve word order:
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {tokens.map((token, pos) => (
-                    <div key={pos} className="p-2 bg-gray-50 rounded">
-                      <div className="font-medium mb-1">{token}</div>
-                      <div className="grid grid-cols-8 gap-px">
-                        {Array(16).fill(0).map((_, dim) => (
-                          <div
-                            key={dim}
-                            className="h-2 w-2"
-                            style={{
-                              backgroundColor: `rgba(59,130,246,${Math.abs(getPositionalEncoding(pos, dim))})`
-                            }}
-                          />
-                        ))}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        Position {pos + 1}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="text-sm mt-4">
-                  Positional encoding uses sine and cosine functions of different frequencies:
-                  <ul className="list-disc ml-5 mt-2">
-                    <li>Even dimensions use sin(pos/10000^(2i/d_model))</li>
-                    <li>Odd dimensions use cos(pos/10000^(2i/d_model))</li>
-                    <li>This creates unique patterns for each position</li>
-                  </ul>
-                </div>
-              </div>
-            )
-          },
-          {
-            title: "Token Embeddings",
-            content: (
-              <div className="space-y-4">
-                <div className="text-sm mb-4">
-                  Each token is converted to a {d_model}-dimensional vector:
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {tokens.map((token, idx) => (
-                    <div 
-                      key={idx}
-                      className={`p-2 rounded cursor-pointer ${selectedToken === idx ? 'bg-blue-100 border-blue-300' : 'bg-gray-50'}`}
-                      onClick={() => setSelectedToken(idx)}
-                    >
-                      <div className="font-medium mb-1">{token}</div>
-                      <div className="grid grid-cols-8 gap-px">
-                        {embeddings[idx].slice(0, 16).map((val, i) => (
-                          <div
-                            key={i}
-                            className="h-2 w-2"
-                            style={{
-                              backgroundColor: `rgba(59,130,246,${Math.abs(val)})`
-                            }}
-                          />
-                        ))}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        Showing first 16 of {d_model} dimensions
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          },
-          {
-            title: "Matrix Multiplication Steps",
-            content: (
-              <div className="space-y-4">
-                <div className="text-sm mb-4">
-                  Let's see how Q, K, V matrices are computed step by step:
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-50 p-4 rounded">
-                    <div className="font-medium mb-2">Computing Q = XW_q</div>
-                    <div className="relative">
-                      <div className="grid grid-cols-8 gap-px mb-4">
-                        {Array(64).fill(0).map((_, i) => (
-                          <div
-                            key={i}
-                            className="h-2 w-2 bg-blue-500 transition-all duration-300"
-                            style={{
-                              opacity: i < step * 8 ? 1 : 0.2
-                            }}
-                          />
-                        ))}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Computing element {Math.floor(step/8)},{step%8}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="font-medium">Current Operation:</div>
-                    <div className="font-mono text-sm bg-gray-100 p-2 rounded">
-                      Q[{Math.floor(step/8)},{step%8}] = Σ(X[i] * W_q[i,j])
-                    </div>
+                  <div className="font-medium">Current Operation:</div>
+                  <div className="font-mono text-sm bg-gray-100 p-2 rounded">
+                    Q[{Math.floor(step/8)},{step%8}] = Σ(X[i] * W_q[i,j])
                   </div>
                 </div>
               </div>
-            )
-          },
-          {
-            title: "Multi-Head Attention",
-            content: (
-              <div className="space-y-4">
-                <div className="text-sm mb-4">
-                  Each head can focus on different types of relationships:
-                </div>
-                <div className="flex gap-4 mb-4">
-                  {Array(num_heads).fill(0).map((_, i) => (
-                    <Button
-                      key={i}
-                      variant={selectedHead === i ? 'default' : 'outline'}
-                      onClick={() => setSelectedHead(i)}
-                    >
-                      Head {i + 1}
-                    </Button>
-                  ))}
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr>
-                        <th className="w-24"></th>
-                        {tokens.map((token, i) => (
-                          <th key={i} className="px-2 py-1 text-sm rotate-45 h-32">
-                            {token}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
+            </div>
+          )
+        },
+        {
+          title: "Multi-Head Attention",
+          content: (
+            <div className="space-y-4">
+              <div className="text-sm mb-4">
+                Each head can focus on different types of relationships:
+              </div>
+              <div className="flex gap-4 mb-4">
+                {Array(num_heads).fill(0).map((_, i) => (
+                  <Button
+                    key={i}
+                    variant={selectedHead === i ? 'default' : 'outline'}
+                    onClick={() => setSelectedHead(i)}
+                  >
+                    Head {i + 1}
+                  </Button>
+                ))}
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr>
+                      <th className="w-24"></th>
                       {tokens.map((token, i) => (
-                        <tr key={i}>
-                          <td className="font-medium text-sm px-2">{token}</td>
-                          {tokens.map((_, j) => {
-                            let attention = 0;
-                            if (
-                              selectedHead === 0 &&
-                              attentionPatterns.coreference[tokens[i]]?.includes(tokens[j])
-                            ) {
-                              attention = 0.8;
-                            } else if (
-                              selectedHead === 1 &&
-                              attentionPatterns.subjectVerb[tokens[i]]?.includes(tokens[j])
-                            ) {
-                              attention = 0.7;
-                            } else if (j < i) {
-                              attention = 0.1 + Math.random() * 0.2;
-                            }
-                            return (
-                              <td
-                                key={j}
-                                className="border p-2 text-xs"
-                                style={{
-                                  backgroundColor: `rgba(59,130,246,${attention})`
-                                }}
-                              >
-                                {attention.toFixed(2)}
-                              </td>
-                            );
-                          })}
-                        </tr>
+                        <th key={i} className="px-2 py-1 text-sm rotate-45 h-32">
+                          {token}
+                        </th>
                       ))}
-                    </tbody>
-                  </table>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tokens.map((token, i) => (
+                      <tr key={i}>
+                        <td className="font-medium text-sm px-2">{token}</td>
+                        {tokens.map((_, j) => {
+                          // Simulate attention patterns based on our defined patterns
+                          let attention = 0;
+                          if (selectedHead === 0 && attentionPatterns.coreference[tokens[i]]?.includes(tokens[j])) {
+                            attention = 0.8;
+                          } else if (selectedHead === 1 && attentionPatterns.subjectVerb[tokens[i]]?.includes(tokens[j])) {
+                            attention = 0.7;
+                          } else if (j < i) {
+                            attention = 0.1 + Math.random() * 0.2;
+                          }
+                          return (
+                            <td 
+                              key={j}
+                              className="border p-2 text-xs"
+                              style={{
+                                backgroundColor: `rgba(59,130,246,${attention})`
+                              }}
+                            >
+                              {attention.toFixed(2)}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="text-sm text-gray-500">
+                Head {selectedHead + 1} Patterns:
+                {selectedHead === 0 && " Coreference relationships"}
+                {selectedHead === 1 && " Subject-verb relationships"}
+                {selectedHead === 2 && " Topical connections"}
+                {selectedHead === 3 && " General context gathering"}
+              </div>
+            </div>
+          )
+        },
+        {
+          title: "Token Relationship Tracing",
+          content: (
+            <div className="space-y-4">
+              <div className="text-sm mb-4">
+                For each token, we compute Query (Q), Key (K), and Value (V) vectors:
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-gray-50 p-4 rounded">
+                  <div className="font-medium mb-2">Query (Q)</div>
+                  <div className="text-sm">
+                    "What information am I looking for?"
+                  </div>
+                  <div className="mt-2 text-xs">
+                    Dimension: [{d_k} × {d_model}]
+                  </div>
                 </div>
-                <div className="text-sm text-gray-500">
-                  Head {selectedHead + 1} Patterns:
-                  {selectedHead === 0 && " Coreference relationships"}
-                  {selectedHead === 1 && " Subject-verb relationships"}
-                  {selectedHead === 2 && " Topical connections"}
-                  {selectedHead === 3 && " General context gathering"}
+                <div className="bg-gray-50 p-4 rounded">
+                  <div className="font-medium mb-2">Key (K)</div>
+                  <div className="text-sm">
+                    "What information do I contain?"
+                  </div>
+                  <div className="mt-2 text-xs">
+                    Dimension: [{d_k} × {d_model}]
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-4 rounded">
+                  <div className="font-medium mb-2">Value (V)</div>
+                  <div className="text-sm">
+                    "What information do I provide?"
+                  </div>
+                  <div className="mt-2 text-xs">
+                    Dimension: [{d_k} × {d_model}]
+                  </div>
                 </div>
               </div>
-            )
-          },
-          {
-            title: "Token Relationship Tracing",
-            content: (
-              <div className="space-y-4">
-                <div className="text-sm mb-4">
-                  For each token, we compute Query (Q), Key (K), and Value (V) vectors:
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-gray-50 p-4 rounded">
-                    <div className="font-medium mb-2">Query (Q)</div>
-                    <div className="text-sm">
-                      "What information am I looking for?"
-                    </div>
-                    <div className="mt-2 text-xs">
-                      Dimension: [{d_k} × {d_model}]
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded">
-                    <div className="font-medium mb-2">Key (K)</div>
-                    <div className="text-sm">
-                      "What information do I contain?"
-                    </div>
-                    <div className="mt-2 text-xs">
-                      Dimension: [{d_k} × {d_model}]
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded">
-                    <div className="font-medium mb-2">Value (V)</div>
-                    <div className="text-sm">
-                      "What information do I provide?"
-                    </div>
-                    <div className="mt-2 text-xs">
-                      Dimension: [{d_k} × {d_model}]
-                    </div>
-                  </div>
-                </div>
-                <div className="text-sm mt-4">
-                  Steps:
-                  <ol className="list-decimal ml-5 mt-2 space-y-2">
-                    <li>Compute attention scores: QK^T / √{d_k}</li>
-                    <li>Apply softmax to get attention weights</li>
-                    <li>Multiply with V to get weighted sum</li>
-                    <li>Concatenate all heads and project back</li>
-                  </ol>
-                </div>
+              <div className="text-sm mt-4">
+                Steps:
+                <ol className="list-decimal ml-5 mt-2 space-y-2">
+                  <li>Compute attention scores: QK^T / √{d_k}</li>
+                  <li>Apply softmax to get attention weights</li>
+                  <li>Multiply with V to get weighted sum</li>
+                  <li>Concatenate all heads and project back</li>
+                </ol>
               </div>
-            )
-          },
-          {
-            title: "Attention Flow Animation",
-            content: (
-              <div className="space-y-4">
-                <div className="text-sm mb-4">
-                  <p className="font-medium">Watch how information flows through the attention mechanism:</p>
-                  <p className="text-gray-600 mt-2">Click on any word to see its attention patterns and relationships.</p>
-                </div>
-                <div className="space-y-6">
-                  {sentences.map((sentence, sentIdx) => (
-                    <div key={sentIdx} className="p-4 bg-gray-50 rounded-lg">
-                      {sentence.split(" ").map((word, wordIdx) => {
-                        const tokenIdx = tokens.findIndex((t) => t === word);
-                        return (
-                          <span
-                            key={wordIdx}
-                            className={`inline-block px-2 py-1 m-1 rounded cursor-pointer transition-all duration-300 hover:bg-blue-100 ${selectedToken === tokenIdx ? 'bg-blue-200 font-medium scale-110' : 'bg-white'}`}
-                            onClick={() => setSelectedToken(tokenIdx)}
+            </div>
+          )
+        },
+        {
+          title: "Attention Flow Animation",
+          content: (
+            <div className="space-y-4">
+              <div className="text-sm mb-4">
+                <p className="font-medium">Watch how information flows through the attention mechanism:</p>
+                <p className="text-gray-600 mt-2">Click on any word to see its attention patterns and relationships.</p>
+              </div>
+              
+              {/* Organized sentence display with interactive tokens */}
+              <div className="space-y-6">
+                {sentences.map((sentence, sentIdx) => (
+                  <div key={sentIdx} className="p-4 bg-gray-50 rounded-lg">
+                    {sentence.split(' ').map((word, wordIdx) => {
+                      const tokenIdx = tokens.findIndex(t => t === word);
+                      return (
+                        <span 
+                          key={wordIdx}
+                          className={`inline-block px-2 py-1 m-1 rounded cursor-pointer transition-all duration-300 hover:bg-blue-100 ${
+                            selectedToken === tokenIdx ? 'bg-blue-200 font-medium scale-110' : 'bg-white'
+                          }`}
+                          onClick={() => setSelectedToken(tokenIdx)}
+                        >
+                          {word}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+    
+              {/* Attention visualization overlay */}
+              {selectedToken !== null && (
+                <div className="mt-4 p-4 border-2 border-blue-200 rounded-lg bg-white">
+                  <div className="font-medium mb-2">
+                    Attention patterns for "{tokens[selectedToken]}":
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {/* Coreference relationships */}
+                    {attentionPatterns.coreference[tokens[selectedToken]] && (
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <span className="text-sm font-medium text-blue-600">Coreference:</span>
+                        {attentionPatterns.coreference[tokens[selectedToken]].map((related, idx) => (
+                          <span 
+                            key={idx}
+                            className="px-2 py-1 bg-blue-50 rounded animate-pulse"
                           >
-                            {word}
+                            {related}
                           </span>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-                {selectedToken !== null && (
-                  <div className="mt-4 p-4 border-2 border-blue-200 rounded-lg bg-white">
-                    <div className="font-medium mb-2">
-                      Attention patterns for "{tokens[selectedToken]}":
-                    </div>
-                    <div className="space-y-3">
-                      {attentionPatterns.coreference[tokens[selectedToken]] && (
-                        <div className="flex flex-wrap gap-2 items-center">
-                          <span className="text-sm font-medium text-blue-600">
-                            Coreference:
+                        ))}
+                      </div>
+                    )}
+    
+                    {/* Subject-verb relationships */}
+                    {attentionPatterns.subjectVerb[tokens[selectedToken]] && (
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <span className="text-sm font-medium text-green-600">Actions:</span>
+                        {attentionPatterns.subjectVerb[tokens[selectedToken]].map((related, idx) => (
+                          <span 
+                            key={idx}
+                            className="px-2 py-1 bg-green-50 rounded animate-pulse"
+                          >
+                            {related}
                           </span>
-                          {attentionPatterns.coreference[tokens[selectedToken]].map(
-                            (related, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2 py-1 bg-blue-50 rounded animate-pulse"
-                              >
-                                {related}
-                              </span>
-                            )
-                          )}
-                        </div>
-                      )}
-                      {attentionPatterns.subjectVerb[tokens[selectedToken]] && (
-                        <div className="flex flex-wrap gap-2 items-center">
-                          <span className="text-sm font-medium text-green-600">
-                            Actions:
-                          </span>
-                          {attentionPatterns.subjectVerb[tokens[selectedToken]].map(
-                            (related, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2 py-1 bg-green-50 rounded animate-pulse"
-                              >
-                                {related}
-                              </span>
-                            )
-                          )}
-                        </div>
-                      )}
-                      <div className="mt-4">
-                        <div className="text-sm font-medium mb-2">
-                          Attention Distribution:
-                        </div>
-                        <div className="overflow-x-auto">
-                          <table className="w-full">
-                            <thead>
-                              <tr>
-                                <th className="px-2 py-1 text-left">Token</th>
-                                <th className="px-2 py-1 text-left">Raw Score</th>
-                                <th className="px-2 py-1 text-left">Attention Weight</th>
-                                <th className="px-2 py-1 text-left">Type</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {tokens.map((token, idx) => {
-                                if (idx > tokens.indexOf(tokens[selectedToken])) return null;
-                                let rawScore = Math.random() * 0.1;
-                                let type = "Context";
-                                if (
-                                  attentionPatterns.coreference[tokens[selectedToken]]?.includes(token)
-                                ) {
-                                  rawScore += 2.0;
-                                  type = "Coreference";
-                                } else if (
-                                  attentionPatterns.subjectVerb[tokens[selectedToken]]?.includes(token)
-                                ) {
-                                  rawScore += 1.5;
-                                  type = "Subject-Verb";
-                                }
-                                const distance = tokens.indexOf(tokens[selectedToken]) - idx;
-                                rawScore *= Math.exp(-distance * 0.1);
-                                return (
-                                  <tr key={idx} className="hover:bg-gray-50">
-                                    <td className="px-2 py-1">
-                                      <span className={`inline-block px-1 rounded ${token === tokens[selectedToken] ? 'bg-blue-100' : ''}`}>
-                                        {token}
-                                      </span>
-                                    </td>
-                                    <td className="px-2 py-1 text-sm text-gray-600">
-                                      {rawScore.toFixed(2)}
-                                    </td>
-                                    <td className="px-2 py-1">
-                                      <div className="flex items-center gap-2">
-                                        <div
-                                          className="h-2 rounded"
-                                          style={{
-                                            width: `${Math.min(100, rawScore * 30)}%`,
-                                            backgroundColor: `rgba(59,130,246,${Math.min(1, rawScore / 2)})`
-                                          }}
-                                        />
-                                      </div>
-                                    </td>
-                                    <td className="px-2 py-1">
-                                      <span className={`text-xs px-1 rounded ${type === "Coreference" ? 'bg-blue-100' : type === "Subject-Verb" ? 'bg-green-100' : 'bg-gray-100'}`}>
-                                        {type}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                        <div className="text-xs text-gray-500 mt-2">
-                          Note:
-                          <ul className="list-disc ml-4">
-                            <li>Future tokens are masked (cannot be attended to)</li>
-                            <li>Raw scores are converted to probabilities via softmax</li>
-                            <li>Attention weights sum to 1 for each token</li>
-                          </ul>
-                        </div>
+                        ))}
+                      </div>
+                    )}
+    
+                    {/* Show attention scores */}
+                    <div className="mt-4">
+                      <div className="text-sm font-medium mb-2">Attention Distribution:</div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr>
+                              <th className="px-2 py-1 text-left">Token</th>
+                              <th className="px-2 py-1 text-left">Raw Score</th>
+                              <th className="px-2 py-1 text-left">Attention Weight</th>
+                              <th className="px-2 py-1 text-left">Type</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {tokens.map((token, idx) => {
+                              if (idx > tokens.indexOf(tokens[selectedToken])) {
+                                return null; // Future tokens are masked
+                              }
+                              
+                              // Calculate simulated attention scores
+                              let rawScore = Math.random() * 0.1; // Base random noise
+                              let type = "Context";
+                              
+                              // Add stronger signals for meaningful relationships
+                              if (attentionPatterns.coreference[tokens[selectedToken]]?.includes(token)) {
+                                rawScore += 2.0;
+                                type = "Coreference";
+                              } else if (attentionPatterns.subjectVerb[tokens[selectedToken]]?.includes(token)) {
+                                rawScore += 1.5;
+                                type = "Subject-Verb";
+                              }
+                              
+                              // Position-based attention decay
+                              const distance = tokens.indexOf(tokens[selectedToken]) - idx;
+                              rawScore *= Math.exp(-distance * 0.1);
+                              
+                              return (
+                                <tr key={idx} className="hover:bg-gray-50">
+                                  <td className="px-2 py-1">
+                                    <span className={`inline-block px-1 rounded ${
+                                      token === tokens[selectedToken] ? 'bg-blue-100' : ''
+                                    }`}>
+                                      {token}
+                                    </span>
+                                  </td>
+                                  <td className="px-2 py-1 text-sm text-gray-600">
+                                    {rawScore.toFixed(2)}
+                                  </td>
+                                  <td className="px-2 py-1">
+                                    <div className="flex items-center gap-2">
+                                      <div 
+                                        className="h-2 rounded"
+                                        style={{
+                                          width: `${Math.min(100, rawScore * 30)}%`,
+                                          backgroundColor: `rgba(59,130,246,${Math.min(1, rawScore/2)})`
+                                        }}
+                                      />
+                                    </div>
+                                  </td>
+                                  <td className="px-2 py-1">
+                                    <span className={`text-xs px-1 rounded ${
+                                      type === "Coreference" ? 'bg-blue-100' :
+                                      type === "Subject-Verb" ? 'bg-green-100' :
+                                      'bg-gray-100'
+                                    }`}>
+                                      {type}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-2">
+                        Note: 
+                        <ul className="list-disc ml-4">
+                          <li>Future tokens are masked (cannot be attended to)</li>
+                          <li>Raw scores are converted to probabilities via softmax</li>
+                          <li>Attention weights sum to 1 for each token</li>
+                        </ul>
                       </div>
                     </div>
                   </div>
-                )}
-                {selectedToken === null && (
-                  <div className="text-center text-gray-500 py-8">
-                    👆 Click any word above to see its attention patterns
-                  </div>
-                )}
-              </div>
-            )
-          }
-        ];
-
-        return (
-          <Card className="w-full max-w-6xl">
-            <CardContent>
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold">{steps[step].title}</h2>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setStep(Math.max(0, step - 1))}
-                      disabled={step === 0}
-                    >
-                      <ChevronLeft className="h-4 w-4 mr-2" />
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => setStep(Math.min(steps.length - 1, step + 1))}
-                      disabled={step === steps.length - 1}
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </div>
                 </div>
-                {steps[step].content}
-                <div className="text-sm text-gray-500">
-                  Step {step + 1} of {steps.length}
+              )}
+    
+              {selectedToken === null && (
+                <div className="text-center text-gray-500 py-8">
+                  👆 Click any word above to see its attention patterns
+                </div>
+              )}
+            </div>
+          )
+        }
+      ];
+    
+      return (
+        <Card className="w-full max-w-6xl">
+          <CardContent className="p-6">
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">{steps[step].title}</h2>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep(Math.max(0, step - 1))}
+                    disabled={step === 0}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-2" />
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep(Math.min(steps.length - 1, step + 1))}
+                    disabled={step === steps.length - 1}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        );
-      };
-
-      // Render the app
-      ReactDOM.createRoot(document.getElementById('root')).render(
-        <TransformerVisualizer />
+              
+              {steps[step].content}
+              
+              <div className="text-sm text-gray-500">
+                Step {step + 1} of {steps.length}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       );
+    };
+  
+    
+    export default TransformerVisualizer;
 
-      // Initialize Lucide icons
-      lucide.createIcons();
-    </script>
-  </body>
+    // Render the app
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      <TransformerVisualizer />
+    );
+    
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
+</body>
 </html>
-
