@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transformer Visualizer</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- React CDNs -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body class="p-4 bg-gray-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Simplified UI components using Tailwind classes
+    const Card = ({ children, className }) => (
+      <div className={`w-full max-w-6xl bg-white rounded-lg shadow-md ${className}`}>
+        {children}
+      </div>
+    );
+
+    const CardContent = ({ children }) => (
+      <div className="p-6">{children}</div>
+    );
+
+    const Button = ({ children, variant = 'default', ...props }) => (
+      <button
+        className={`px-4 py-2 rounded-md transition-colors ${
+          variant === 'default' 
+            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+            : 'border border-gray-300 hover:bg-gray-50'
+        }`}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+
+    // Paste the entire TransformerVisualizer component here
+    // (Replace component imports with the above simplified components)
+    // ... [Paste the full TransformerVisualizer component code here] ...
+
+    // Render the app
+    ReactDOM.createRoot(document.getElementById('root')).render(
+      <TransformerVisualizer />
+    );
+    
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>
